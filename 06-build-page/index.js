@@ -78,7 +78,8 @@ function getSection(section, writeStream) {
           } else {
             if (stats.isFile()) {
               const fileName = path.parse(filePath).name;
-              if (fileName === section) {
+              const fileExt = path.parse(filePath).ext;
+              if (fileName === section && fileExt.toLocaleLowerCase() === '.html') {
                 const readableStream = fs.createReadStream(filePath, 'utf-8');
                 readableStream.on('data', chunk => writeStream.write(chunk));
               }
