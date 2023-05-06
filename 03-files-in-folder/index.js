@@ -9,7 +9,7 @@ fs.readdir(directoryPath, (err, files) => {
   } else {
     console.log(`Файлы в директории ${directoryPath}:`);
     files.forEach((file) => {
-      const filePath = `${directoryPath}/${file}`;
+      const filePath = path.join(directoryPath, file);
       fs.stat(filePath, (err, stats) => {
         if (err) {
           console.log(`Ошибка при чтении файла ${filePath}: ${err}`);
