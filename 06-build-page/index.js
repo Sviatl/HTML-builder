@@ -102,7 +102,7 @@ async function deleteDirectory(dirPath) {
 async function deleteInnerOfDirectory(dirPath) {
   const files = await fsPromises.readdir(dirPath);
 
-  for (const file of files) {
+  for await (const file of files) {
     const filename = path.join(dirPath, file);
     const stats = await fsPromises.stat(filename);
     if (stats.isFile()) {
