@@ -8,9 +8,9 @@ const newFilename = 'bundle.css';
 const newFilePath = path.join(__dirname, newDirectoryPath, newFilename);
 const writeStream = fs.createWriteStream(newFilePath, { flags: 'w' });
 
-copyStiles();
+copyStyles();
 
-async function copyStiles() {
+async function copyStyles() {
   const files = await fsPromises.readdir(directoryPath);
   for (const file of files) {
     const filePath = path.join(directoryPath, file);
