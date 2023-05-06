@@ -43,7 +43,7 @@ async function buildPage() {
   //5. copy assets
   const source = path.join(__dirname, 'assets');
   const dest = path.join(newDirectoryPath, 'assets');
-  copyDirectory(source, dest);
+  await copyDirectory(source, dest);
 }
 
 async function addFileHTML(filePath, writeStream) {
@@ -53,13 +53,15 @@ async function addFileHTML(filePath, writeStream) {
     crlfDelay: Infinity
   });
   await rl.on('line', (line) => {
-    const regex = /\{\{(\w+)\}\}/;
-    const match = line.match(regex);
-
-    if (match) {
+    const regex = /{{(\w+)}}/g;
+    let match;
+    let isSection = false;
+    while ((match = regex.exec(line)) !== null) {
+      isSection = true;
       const section = match[1];
       getSection(section, writeStream);
-    } else {
+    }
+    if (!isSection) {
       writeStream.write(line);
     }
   });
