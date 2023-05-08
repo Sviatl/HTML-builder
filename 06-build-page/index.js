@@ -48,48 +48,70 @@ async function buildPage() {
 
 async function addFileHTML(filePath, writeStream) {
   const readableStream = fs.createReadStream(filePath, 'utf-8');
-  const rl = await readline.createInterface({
+  const rl = readline.createInterface({
     input: readableStream,
     crlfDelay: Infinity
   });
-  await rl.on('line', (line) => {
-    const regex = /{{(\w+)}}/g;
-    let match;
-    let isSection = false;
-    while ((match = regex.exec(line)) !== null) {
-      isSection = true;
-      const section = match[1];
-      getSection(section, writeStream);
-    }
-    if (!isSection) {
-      writeStream.write(line);
-    }
+  // await rl.on('line', (line) => {
+  //   longAsyncOperation(line, writeStream); 
+  // });
+  for await (const line of rl) {
+    await longAsyncOperation(line, writeStream);
+  }
+}
+
+async function longAsyncOperation(line, writeStream) {
+  //return new Promise((resolve) => {
+  const regex = /{{(\w+)}}/g;
+  let match;
+  let isSection = false;
+  while ((match = regex.exec(line)) !== null) {
+    isSection = true;
+    const section = match[1];
+    //writeMyF(section, writeStream);
+    await getSection(section, writeStream);
+  }
+  if (!isSection) {
+    await writeMyF(line, writeStream);
+  }
+  //  resolve();
+  //});
+}
+
+async function writeMyF(line, writeStream) {
+  return new Promise((resolve) => {
+    writeStream.write(line); resolve();
   });
 }
 
-function getSection(section, writeStream) {
-  fs.readdir(componentsPath, (err, files) => {
-    if (err) {
-      console.log(`Ошибка при чтении директории: ${err}`);
-    } else {
-      files.forEach((file) => {
-        const filePath = path.join(componentsPath, file);
-        fs.stat(filePath, (err, stats) => {
-          if (err) {
-            console.log(`Ошибка при чтении файла ${filePath}: ${err}`);
-          } else {
-            if (stats.isFile()) {
-              const fileName = path.parse(filePath).name;
-              const fileExt = path.parse(filePath).ext;
-              if (fileName === section && fileExt.toLocaleLowerCase() === '.html') {
-                const readableStream = fs.createReadStream(filePath, 'utf-8');
-                readableStream.on('data', chunk => writeStream.write(chunk));
-              }
+async function getSection(section, writeStream) {
+  return new Promise((resolve) => {
+    fs.readdir(componentsPath, async (err, files) => {
+      if (err) {
+        console.log(`Ошибка при чтении директории: ${err}`);
+        resolve();
+      } else {
+        for (const file of files) {
+          const filePath = path.join(componentsPath, file);
+          const stats = await fs.promises.stat(filePath);
+          if (stats.isFile()) {
+            const fileName = path.parse(filePath).name;
+            const fileExt = path.parse(filePath).ext;
+            if (fileName === section && fileExt.toLocaleLowerCase() === '.html') {
+              const readableStream = fs.createReadStream(filePath, 'utf-8');
+              await new Promise((resolve) => {
+                readableStream.on('data', (chunk) => {
+                  writeMyF(chunk, writeStream).then(() => {
+                    resolve();
+                  });
+                });
+              });
             }
           }
-        });
-      });
-    }
+        }
+        resolve();
+      }
+    });
   });
 }
 
